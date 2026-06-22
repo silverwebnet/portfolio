@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>営業サポート計算ツール</title>
+    <style>
+        /* 画面全体のスクロールを完全に禁止 */
+        html, body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        /* アプリの土台 */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            height: -webkit-fill-available;
+            box-sizing: border-box;
+        }
+
+        /* 【変更】上部ナビゲーションタブ（背景を濃いめのネイビーに変更） */
+        .top-nav {
+            height: 46px;
+            background-color: #2c3e50; /* 濃い紺色 */
+            border-bottom: 1px solid #1a252f;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #bdc3c7; /* 非選択時は落ち着いた薄いグレー */
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        /* 選択中のタブスタイル */
+        .nav-item.active {
+            color: #fff; /* 文字を白に */
+            background-color: #34495e; /* 少しだけ明るいネイビーにして立体感を出す */
+            border-bottom: 4px solid #3498db; /* 下線を少し太く鮮やかに */
+        }
+
+        /* コンテンツ表示エリア */
+        .app-container {
+            flex: 1;
+            padding: 12px 15px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* 各画面の切り替え */
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 入力欄のヘッダー */
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        /* クリアボタン */
+        .clear-btn {
+            background-color: #7f8c8d;
+            color: #fff;
+            border: none;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .clear-btn:active {
+            background-color: #616a6b;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 9px;
+            font-size: 1.05rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #fff;
+            -webkit-appearance: none;
+        }
+
+        /* 利益率ラジオボタン */
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            padding: 2px 0;
+        }
+        .radio-label {
+            font-size: 0.95rem;
+            font-weight: normal;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 62px;
+        }
+        input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        /* 計算結果ボックス */
+        .result-box {
+            background-color: #eef2f7;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 125px;
+        }
+        .result-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        .result-value {
+            font-size: 1.7rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .text-red {
+            color: #d9383a !important;
+        }
+        .hint {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin: 2px 0 0 0;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+    <!-- ナビゲーションタブ（背景濃いめバージョン） -->
+    <div class="top-nav">
+        <div id="tabPrice" class="nav-item active" onclick="switchTab('price')">
+            <div>販売単価計算</div>
+        </div>
+        <div id="tabMargin" class="nav-item" onclick="switchTab('margin')">
+            <div>粗利率計算</div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <!-- 1つ目の画面：販売単価計算 -->
+        <div id="contentPrice" class="tab-content active">
+            
+            <div class="form-group">
+                <div class="input-header">
+                    <label for="costPrice1">仕入れ単価 (円)</label>
+                    <button class="clear-btn" onclick="clearPriceForm()">クリア</button>
+                </div>
+                <input type="number" id="costPrice1" placeholder="金額を入力" min="0" oninput="calculatePrice()">
+            </div>
+
+            <div class="form-group">
+                <label>利益率</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate100" value="0.10" onchange="calculatePrice()">10.0%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate95" value="0.095" onchange="calculatePrice()">9.5%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate90" value="0.09" onchange="calculatePrice()">9.0%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate85" value="0.085" onchange="calculatePrice()">8.5%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate80" value="0.08" checked onchange="calculatePrice()">8.0%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate75" value="0.075" onchange="calculatePrice()">7.5%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate70" value="0.07" onchange="calculatePrice()">7.0%</label>
+                    <label class="radio-label"><input type="radio" name="marginRate" id="rate65" value="0.065" onchange="calculatePrice()">6.5%</label>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label" id="resultLabel">販売単価 (8.0%値入れ)</div>
+                <div class="result-value" id="sellingPrice">0 円</div>
+                <p id="methodHint" class="hint">式：仕入れ単価 ÷ 0.92</p>
+                <p class="hint">小数点第1位四捨五入</p>
+            </div>
+        </div>
+
+        <!-- 2つ目の画面：粗利率計算 -->
+        <div id="contentMargin" class="tab-content">
+            
+            <div class="form-group">
+                <div class="input-header">
+                    <label for="costPrice2">仕入れ単価 (円)</label>
+                    <button class="clear-btn" onclick="clearMarginForm()">クリア</button>
+                </div>
+                <input type="number" id="costPrice2" placeholder="金額を入力" min="0" oninput="calculateMargin()">
+            </div>
+
+            <div class="form-group">
+                <label for="sellingPrice2">販売予想単価 (円)</label>
+                <input type="number" id="sellingPrice2" placeholder="金額を入力" min="0" oninput="calculateMargin()">
+            </div>
+
+            <div class="result-box">
+                <div class="result-value" id="marginValue">0.0 %</div>
+                <p class="hint">式：（販売予想単価 － 仕入れ単価）÷ 販売予想単価</p>
+                <p class="hint">小数点第2位四捨五入</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// タブ切り替え処理
+function switchTab(tabName) {
+    document.getElementById('contentPrice').classList.remove('active');
+    document.getElementById('contentMargin').classList.remove('active');
+    document.getElementById('tabPrice').classList.remove('active');
+    document.getElementById('tabMargin').classList.remove('active');
+    
+    if (tabName === 'price') {
+        document.getElementById('contentPrice').classList.add('active');
+        document.getElementById('tabPrice').classList.add('active');
+    } else if (tabName === 'margin') {
+        document.getElementById('contentMargin').classList.add('active');
+        document.getElementById('tabMargin').classList.add('active');
+    }
+}
+
+// 販売単価計算
+function calculatePrice() {
+    const costInput = document.getElementById('costPrice1').value;
+    const selectedRate = parseFloat(document.querySelector('input[name="marginRate"]:checked').value);
+    
+    const resultLabel = document.getElementById('resultLabel');
+    const resultDisplay = document.getElementById('sellingPrice');
+    const hintText = document.getElementById('methodHint');
+
+    const ratePercent = (selectedRate * 100).toFixed(1);
+    const divisor = parseFloat((1 - selectedRate).toFixed(3));
+    const divisorText = divisor.toString();
+
+    if (!costInput || costInput <= 0) {
+        resultLabel.innerText = `販売単価 (${ratePercent}%値入れ)`;
+        resultDisplay.innerText = "0 円";
+        hintText.innerText = `式：仕入れ単価 ÷ ${divisorText}`;
+        return;
+    }
+
+    const cost = parseFloat(costInput);
+    const sellingPrice = cost / divisor;
+
+    resultLabel.innerText = `販売単価 (${ratePercent}%値入れ)`;
+    hintText.innerText = `式：仕入れ単価 ÷ ${divisorText}`;
+
+    const roundedPrice = Math.round(sellingPrice);
+    resultDisplay.innerText = roundedPrice.toLocaleString() + " 円";
+}
+
+function clearPriceForm() {
+    document.getElementById('costPrice1').value = '';
+    document.getElementById('rate80').checked = true;
+    const resultLabel = document.getElementById('resultLabel');
+    const resultDisplay = document.getElementById('sellingPrice');
+    const hintText = document.getElementById('methodHint');
+    
+    resultLabel.innerText = "販売単価 (8.0%値入れ)";
+    resultDisplay.innerText = "0 円";
+    hintText.innerText = "式：仕入れ単価 ÷ 0.92";
+}
+
+// 粗利率計算
+function calculateMargin() {
+    const costInput = document.getElementById('costPrice2').value;
+    const sellingInput = document.getElementById('sellingPrice2').value;
+    const marginDisplay = document.getElementById('marginValue');
+
+    if (!costInput || !sellingInput || parseFloat(sellingInput) <= 0) {
+        marginDisplay.innerText = "0.0 %";
+        marginDisplay.classList.remove('text-red');
+        return;
+    }
+
+    const cost = parseFloat(costInput);
+    const selling = parseFloat(sellingInput);
+    
+    const marginRate = ((selling - cost) / selling) * 100;
+    const roundedMargin = marginRate.toFixed(1);
+
+    marginDisplay.innerText = roundedMargin + " %";
+
+    if (marginRate < 0) {
+        marginDisplay.classList.add('text-red');
+    } else {
+        marginDisplay.classList.remove('text-red');
+    }
+}
+
+function clearMarginForm() {
+    document.getElementById('costPrice2').value = '';
+    document.getElementById('sellingPrice2').value = '';
+    const marginDisplay = document.getElementById('marginValue');
+    marginDisplay.innerText = "0.0 %";
+    marginDisplay.classList.remove('text-red');
+}
+</script>
+
+</body>
+</html>
