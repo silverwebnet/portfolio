@@ -2,7 +2,39 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- スマホやタブレットで文字が小さくなりすぎるのを防ぐ魔法の1行 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ポートフォリオ</title>
+    <style>
+        /* 画面全体の見やすさを整える設定 */
+        body {
+            font-family: sans-serif; /* 読みやすいゴシック体のフォントにする */
+            line-height: 1.6;        /* 行間を少し広げて読みやすくする */
+            max-width: 600px;        /* パソコンの大画面でも横に広がりすぎないようにする */
+            margin: 0 auto;          /* 画面の中央に配置する */
+            padding: 20px;           /* 画面の端に少し余白を作る（スマホで文字が端に張り付かないように） */
+            color: #333333;          /* 文字の色を真っ黒ではなく優しい黒にする */
+        }
+        h1 {
+            font-size: 1.5rem;       /* 端末に合わせて見やすい文字の大きさに調整 */
+            border-bottom: 2px solid #333; /* タイトルの下に線を引いて引き締める */
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin-top: 30px;
+        }
+        li {
+            margin-bottom: 10px;     /* リンク同士の間隔をあけて、スマホでも指で押しやすくする */
+        }
+        a {
+            color: #0066cc;          /* リンクの色を少し見やすい青にする */
+            text-decoration: none;   /* 下線を一度消す */
+        }
+        a:hover {
+            text-decoration: underline; /* カーソルをのせた時だけ下線を出す */
+        }
+    </style>
 </head>
 <body>
     <h1>silverwebnet のポートフォリオ</h1>
