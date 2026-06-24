@@ -28,10 +28,10 @@
             box-sizing: border-box;
         }
 
-        /* 【変更】上部ナビゲーションタブ（背景を濃いめのネイビーに変更） */
+        /* 上部ナビゲーションタブ（3つに増えたため文字サイズを微調整） */
         .top-nav {
             height: 46px;
-            background-color: #2c3e50; /* 濃い紺色 */
+            background-color: #2c3e50;
             border-bottom: 1px solid #1a252f;
             display: flex;
             justify-content: space-around;
@@ -42,8 +42,8 @@
         .nav-item {
             flex: 1;
             text-align: center;
-            font-size: 0.95rem;
-            color: #bdc3c7; /* 非選択時は落ち着いた薄いグレー */
+            font-size: 0.85rem; /* 3択がスマホで収まるサイズ */
+            color: #bdc3c7;
             cursor: pointer;
             font-weight: bold;
             display: flex;
@@ -54,11 +54,10 @@
             box-sizing: border-box;
             transition: all 0.2s ease;
         }
-        /* 選択中のタブスタイル */
         .nav-item.active {
-            color: #fff; /* 文字を白に */
-            background-color: #34495e; /* 少しだけ明るいネイビーにして立体感を出す */
-            border-bottom: 4px solid #3498db; /* 下線を少し太く鮮やかに */
+            color: #fff;
+            background-color: #34495e;
+            border-bottom: 4px solid #3498db;
         }
 
         /* コンテンツ表示エリア */
@@ -103,7 +102,7 @@
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         
         label {
@@ -123,7 +122,7 @@
             -webkit-appearance: none;
         }
 
-        /* 利益率ラジオボタン */
+        /* ラジオボタンのグループ */
         .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -185,7 +184,7 @@
 
 <div class="app-wrapper">
 
-    <!-- ナビゲーションタブ（背景濃いめバージョン） -->
+    <!-- ナビゲーションタブ（3つのタブに拡張） -->
     <div class="top-nav">
         <div id="tabPrice" class="nav-item active" onclick="switchTab('price')">
             <div>販売単価計算</div>
@@ -193,13 +192,15 @@
         <div id="tabMargin" class="nav-item" onclick="switchTab('margin')">
             <div>粗利率計算</div>
         </div>
+        <div id="tabDiscount" class="nav-item" onclick="switchTab('discount')">
+            <div>割引計算</div>
+        </div>
     </div>
 
     <div class="app-container">
         
         <!-- 1つ目の画面：販売単価計算 -->
         <div id="contentPrice" class="tab-content active">
-            
             <div class="form-group">
                 <div class="input-header">
                     <label for="costPrice1">仕入れ単価 (円)</label>
@@ -232,7 +233,6 @@
 
         <!-- 2つ目の画面：粗利率計算 -->
         <div id="contentMargin" class="tab-content">
-            
             <div class="form-group">
                 <div class="input-header">
                     <label for="costPrice2">仕入れ単価 (円)</label>
@@ -253,6 +253,36 @@
             </div>
         </div>
 
+        <!-- 【新設】3つ目の画面：割引計算 -->
+        <div id="contentDiscount" class="tab-content">
+            <div class="form-group">
+                <div class="input-header">
+                    <label for="beforeDiscount">割引前の数値 (円)</label>
+                    <button class="clear-btn" onclick="clearDiscountForm()">クリア</button>
+                </div>
+                <input type="number" id="beforeDiscount" placeholder="金額を入力" min="0" oninput="calculateDiscount()">
+            </div>
+
+            <div class="form-group">
+                <label>割引率</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc30" value="0.30" onchange="calculateDiscount()">30%</label>
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc25" value="0.25" onchange="calculateDiscount()">25%</label>
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc20" value="0.20" onchange="calculateDiscount()">20%</label>
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc15" value="0.15" onchange="calculateDiscount()">15%</label>
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc10" value="0.10" checked onchange="calculateDiscount()">10%</label>
+                    <label class="radio-label"><input type="radio" name="discountRate" id="disc5" value="0.05" onchange="calculateDiscount()">5%</label>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label" id="discountLabel">割引後の数値 (10%引き)</div>
+                <div class="result-value" id="afterDiscount">0 円</div>
+                <p id="discountHint" class="hint">式：割引前の数値 × 0.9</p>
+                <p class="hint">小数点第1位四捨五入</p>
+            </div>
+        </div>
+
     </div>
 
 </div>
@@ -262,8 +292,10 @@
 function switchTab(tabName) {
     document.getElementById('contentPrice').classList.remove('active');
     document.getElementById('contentMargin').classList.remove('active');
+    document.getElementById('contentDiscount').classList.remove('active');
     document.getElementById('tabPrice').classList.remove('active');
     document.getElementById('tabMargin').classList.remove('active');
+    document.getElementById('tabDiscount').classList.remove('active');
     
     if (tabName === 'price') {
         document.getElementById('contentPrice').classList.add('active');
@@ -271,6 +303,9 @@ function switchTab(tabName) {
     } else if (tabName === 'margin') {
         document.getElementById('contentMargin').classList.add('active');
         document.getElementById('tabMargin').classList.add('active');
+    } else if (tabName === 'discount') {
+        document.getElementById('contentDiscount').classList.add('active');
+        document.getElementById('tabDiscount').classList.add('active');
     }
 }
 
@@ -349,6 +384,47 @@ function clearMarginForm() {
     const marginDisplay = document.getElementById('marginValue');
     marginDisplay.innerText = "0.0 %";
     marginDisplay.classList.remove('text-red');
+}
+
+// 【新設】割引計算
+function calculateDiscount() {
+    const discountInput = document.getElementById('beforeDiscount').value;
+    const selectedRate = parseFloat(document.querySelector('input[name="discountRate"]:checked').value);
+    
+    const resultLabel = document.getElementById('discountLabel');
+    const resultDisplay = document.getElementById('afterDiscount');
+    const hintText = document.getElementById('discountHint');
+
+    const ratePercent = Math.round(selectedRate * 100);
+    const multiplier = parseFloat((1 - selectedRate).toFixed(2));
+
+    if (!discountInput || discountInput <= 0) {
+        resultLabel.innerText = `割引後の数値 (${ratePercent}%引き)`;
+        resultDisplay.innerText = "0 円";
+        hintText.innerText = `式：割引前の数値 × ${multiplier}`;
+        return;
+    }
+
+    const beforeVal = parseFloat(discountInput);
+    const afterVal = beforeVal * multiplier;
+
+    resultLabel.innerText = `割引後の数値 (${ratePercent}%引き)`;
+    hintText.innerText = `式：割引前の数値 × ${multiplier}`;
+
+    const roundedPrice = Math.round(afterVal);
+    resultDisplay.innerText = roundedPrice.toLocaleString() + " 円";
+}
+
+function clearDiscountForm() {
+    document.getElementById('beforeDiscount').value = '';
+    document.getElementById('disc10').checked = true;
+    const resultLabel = document.getElementById('discountLabel');
+    const resultDisplay = document.getElementById('afterDiscount');
+    const hintText = document.getElementById('discountHint');
+    
+    resultLabel.innerText = "割引後の数値 (10%引き)";
+    resultDisplay.innerText = "0 円";
+    hintText.innerText = "式：割引前の数値 × 0.9";
 }
 </script>
 
